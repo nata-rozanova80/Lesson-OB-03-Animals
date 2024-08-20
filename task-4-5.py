@@ -69,7 +69,7 @@ class Veterinarian:
 
 
 zoo = Zoo()
-bird1 = Bird("Косяк", 2)
+bird1 = Bird("Воробей", 2)
 mammal1 = Mammal("Корова", 5)
 reptile1 = Reptile("Уж", 3)
 
