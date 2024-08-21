@@ -1,4 +1,5 @@
 import json
+import os  # Модуль для работы с файловой системой
 
 
 class Animal:
@@ -64,18 +65,31 @@ class Zoo:
 
     def save_to_file(self, filename):
         with open(filename, 'w') as f:
-            json.dump([animal.to_dict() for animal in self.animals], f)
+            json.dump({
+                'animals': [animal.to_dict() for animal in self.animals],
+                'staff': [staff_member.__class__.__name__ for staff_member in self.staff]
+            }, f)
 
     def load_from_file(self, filename):
         with open(filename, 'r') as f:
-            animal_data = json.load(f)
-            for data in animal_data:
-                if data['type'] == 'Bird':
-                    self.add_animal(Bird.from_dict(data))
-                elif data['type'] == 'Mammal':
-                    self.add_animal(Mammal.from_dict(data))
-                elif data['type'] == 'Reptile':
-                    self.add_animal(Reptile.from_dict(data))
+            data = json.load(f)
+
+            # Проверка, что data является словарем
+            if isinstance(data, dict) and 'animals' in data and 'staff' in data:
+                for animal_data in data['animals']:
+                    if animal_data['type'] == 'Bird':
+                        self.add_animal(Bird.from_dict(animal_data))
+                    elif animal_data['type'] == 'Mammal':
+                        self.add_animal(Mammal.from_dict(animal_data))
+                    elif animal_data['type'] == 'Reptile':
+                        self.add_animal(Reptile.from_dict(animal_data))
+                for staff_type in data['staff']:
+                    if staff_type == 'ZooKeeper':
+                        self.add_staff(ZooKeeper())
+                    elif staff_type == 'Veterinarian':
+                        self.add_staff(Veterinarian())
+            else:
+                print("Неверный формат данных в файле.")
 
     def display_data(self):
         print("Животные в зоопарке:")
@@ -84,7 +98,6 @@ class Zoo:
 
         print("\nСотрудники в зоопарке:")
         for staff_member in self.staff:
-
             print(f"Тип: {staff_member.__class__.__name__}")
 
 
@@ -100,15 +113,15 @@ class Veterinarian:
 
 # Функции для ввода новых животных и сотрудников
 def input_animal():
-    animal_type = input("Введите тип животного (Bird, Mammal, Reptile): ")
+    animal_type = input("Введите тип животного (Bird-'b', Mammal-'m', Reptile-'r'): ")
     name = input("Введите имя животного: ")
     age = int(input("Введите возраст животного: "))
 
-    if animal_type.lower() == 'bird':
+    if animal_type.lower() == 'b':
         return Bird(name, age)
-    elif animal_type.lower() == 'mammal':
+    elif animal_type.lower() == 'm':
         return Mammal(name, age)
-    elif animal_type.lower() == 'reptile':
+    elif animal_type.lower() == 'r':
         return Reptile(name, age)
     else:
         print("Неверный тип животного.")
@@ -116,13 +129,13 @@ def input_animal():
 
 
 def input_staff():
-    staff_type = input("Введите тип сотрудника (ZooKeeper, Veterinarian): ")
+    staff_type = input("Введите тип сотрудника (ZooKeeper-'z', Veterinarian-'v'): ")
     name = input("Введите имя сотрудника: ")
 
-    if staff_type.lower() == 'zookeeper':
-        return ZooKeeper()  # Можно добавить атрибуты, если необходимо
-    elif staff_type.lower() == 'veterinarian':
-        return Veterinarian()  # Можно добавить атрибуты, если необходимо
+    if staff_type.lower() == 'z':
+        return ZooKeeper()
+    elif staff_type.lower() == 'v':
+        return Veterinarian()
     else:
         print("Неверный тип сотрудника.")
         return None
@@ -131,15 +144,20 @@ def input_staff():
 # Пример использования
 zoo = Zoo()
 
-# Ввод животных
+# Проверка существования файла и загрузка данных
+filename = 'zoo_data.json'
+if os.path.exists(filename):
+    zoo.load_from_file(filename)
+
+# Ввод новых животных
 num_animals = int(input("Сколько животных вы хотите добавить? "))
 for _ in range(num_animals):
     animal = input_animal()
     if animal:
         zoo.add_animal(animal)
 
-# Ввод сотрудников
-num_staff = int(input("Сколько сотрудников выхотите добавить? "))
+# Ввод новых сотрудников
+num_staff = int(input("Сколько сотрудников вы хотите добавить? "))
 for _ in range(num_staff):
     staff_member = input_staff()
     if staff_member:
@@ -149,6 +167,9 @@ for _ in range(num_staff):
 if zoo.animals or zoo.staff:
     zoo.display_data()
 
+# Сохранение состояния зоопарка в файл
+zoo.save_to_file(filename)
+
 # Кормление и лечение
 if zoo.animals:
     zookeeper = ZooKeeper()
@@ -156,14 +177,7 @@ if zoo.animals:
     zookeeper.feed_animal(zoo.animals[0])  # Кормим первого животного
     veterinarian.heal_animal(zoo.animals[0])  # Лечим первого животного
 
-# Сохранение состояния зоопарка в файл
-zoo.save_to_file('zoo_data.json')
-
-# Загрузка состояния зоопарка из файла
-new_zoo = Zoo()
-new_zoo.load_from_file('zoo_data.json')
-
 # Проверка загруженных данных
-for animal in new_zoo.animals:
+for animal in zoo.animals:
     animal.make_sound()
     animal.eat()

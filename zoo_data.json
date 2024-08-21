@@ -1,1 +1,1 @@
-[]
+{"animals": [{"name": "\u043a\u0443\u043a\u0443\u0448\u043a\u0430", "age": 2, "type": "Bird"}, {"name": "\u043e\u0440\u0435\u043b", "age": 13, "type": "Bird"}, {"name": "owk", "age": 2, "type": "Bird"}], "staff": ["ZooKeeper", "Veterinarian"]}
